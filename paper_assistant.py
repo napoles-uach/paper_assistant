@@ -73,7 +73,7 @@ class PaperAssistant:
                 st.error("The file 'paper.pdf' does not exist. Please make sure the file is in the correct location.")
                 return "Error: File not found", None, None
         else:
-            st.write('Document ready.')
+            st.info('Document ready.')
 
         with st.spinner('Creating assistant...'):
             paper_assistant = self.client.beta.assistants.create(
@@ -89,3 +89,41 @@ class PaperAssistant:
             )
 
         return "Assistant setup completed", vector_store_id, file_id
+
+    def ask_question(self, question, vector_store_id, file_id):
+        with st.spinner('Processing your request...'):
+            # Create a thread and attach the file to the message
+            thread = self.client.beta.threads.create(
+                messages=[
+                    {
+                        "role": "user",
+                        "content": question,
+                        "attachments": [
+                            {"file_id": file_id, "tools": [{"type": "file_search"}]}
+                        ],
+                    }
+                ]
+            )
+
+            # Run the assistant and poll for completion
+            run = self.client.beta.threads.runs.create_and_poll(
+                thread_id=thread.id,
+                assistant_id=vector_store_id,
+                instructions="Please address the user as reader."
+            )
+
+            if run.status == 'completed':
+                # List the messages in the thread
+                messages = self.client.beta.threads.messages.list(thread_id=thread.id)
+                # Function to extract text value from the messages
+                def extract_value(sync_cursor_page):
+                    for message in sync_cursor_page.data:
+                        for block in message.content:
+                            if block.type == 'text':
+                                return block.text.value
+
+                # Example usage (replace 'sync_cursor_page' with your actual object)
+                value = extract_value(messages)
+                return value
+            else:
+                return f"Run status: {run.status}"
