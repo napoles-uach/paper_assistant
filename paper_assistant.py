@@ -10,6 +10,7 @@ class PaperAssistant:
         self.vector_store_id_path = vector_store_id_path
         self.file_id_path = file_id_path
         self.client = OpenAI(api_key=self.api_key)
+        self.assistant_id = None
 
     def save_vector_store_id(self, vector_store_id):
         with open(self.vector_store_id_path, 'w') as f:
@@ -88,9 +89,10 @@ class PaperAssistant:
                 tool_resources={"file_search": {"vector_store_ids": [vector_store_id]}},
             )
 
-        return "Assistant setup completed", vector_store_id, file_id
+        self.assistant_id = paper_assistant.id
+        return "Assistant setup completed", vector_store_id, file_id, self.assistant_id
 
-    def ask_question(self, question, vector_store_id, file_id):
+    def ask_question(self, question, vector_store_id, file_id, assistant_id):
         with st.spinner('Processing your request...'):
             # Create a thread and attach the file to the message
             thread = self.client.beta.threads.create(
@@ -108,7 +110,7 @@ class PaperAssistant:
             # Run the assistant and poll for completion
             run = self.client.beta.threads.runs.create_and_poll(
                 thread_id=thread.id,
-                assistant_id=vector_store_id,
+                assistant_id=assistant_id,
                 instructions="Please address the user as reader."
             )
 
