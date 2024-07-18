@@ -3,7 +3,7 @@ from paper_assistant import PaperAssistant
 
 def main():
     st.title("Paper Assistant Setup")
-    api_key = st.secrets("api_key")
+    api_key = st.secrets["api_key"]
     file_path = "paper.pdf"
 
     if st.button("Setup Assistant"):
