@@ -59,10 +59,20 @@ class PaperAssistant:
             logging.error("The specified file does not exist.")
             raise FileNotFoundError("The specified file does not exist.")
 
-    def setup_assistant(self):
+    def create_assistant(self, vector_store_id, file_id):
         try:
-            vector_store_id = self.manage_vector_store()
-            file_id = self.upload_document()
-            return "Setup complete.", vector_store_id, file_id
+            assistant = self.client.beta.assistants.create(
+                name="Paper Assistant",
+                instructions="Answer questions based on the provided paper using knowledge from the embedded document.",
+                model="gpt-3.5-turbo",
+                tools=[{"type": "file_search", "file_ids": [file_id]}]
+            )
+            return "Assistant created successfully.", assistant
         except Exception as e:
-            return f"Error during setup: {e}", None, None
+            logging.error(f"Error creating assistant: {e}")
+            raise
+
+    def setup_assistant(self):
+        vector_store_id = self.manage_vector_store()
+        file_id = self.upload_document()
+        return self.create_assistant(vector_store_id, file_id)
