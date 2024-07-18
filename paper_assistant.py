@@ -2,7 +2,6 @@ import os
 import json
 import streamlit as st
 from openai import OpenAI
-from rich import print
 
 class PaperAssistant:
     def __init__(self, api_key, local_file_path="paper.pdf", vector_store_id_path="vector_store_id.json", file_id_path="file_id.json"):
@@ -74,7 +73,7 @@ class PaperAssistant:
                 st.error("The file 'paper.pdf' does not exist. Please make sure the file is in the correct location.")
                 return "Error: File not found", None, None
         else:
-            print('Document ready.')
+            st.write('Document ready.')
 
         with st.spinner('Creating assistant...'):
             paper_assistant = self.client.beta.assistants.create(
